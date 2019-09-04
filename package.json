@@ -4,6 +4,11 @@
   "description": "Encryption middleware for Dexie",
   "main": "dist/index.js",
   "license": "MIT",
+  "files": ["dist/index.js"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mark43/dexie-encrypted.git"
+  },
   "dependencies": {
     "tweetnacl": "^1.0.1",
     "typeson": "^5.13.0",
