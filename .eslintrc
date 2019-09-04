@@ -1,0 +1,44 @@
+{
+    "parser": "babel-eslint",
+    "extends": [],
+    "env": {
+        "browser": true,
+        "node": true,
+        "es6": true
+    },
+    "parserOptions": {
+        "ecmaFeatures": {
+            "modules": true,
+            "jsx": true
+        },
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "jsx": true
+    },
+    "plugins": ["react"],
+    "globals": { "React": true },
+    "rules": {
+        "eqeqeq": 2,
+        "quotes": [1, "single"],
+        "no-console": 1,
+        "dot-location": [1, "property"],
+        "no-caller": 2,
+        "no-fallthrough": 2,
+        "no-floating-decimal": 1,
+        "no-loop-func": 0,
+        "no-new-func": 2,
+        "no-sequences": 1,
+        "no-throw-literal": 2,
+        "no-label-var": 2,
+        "no-shadow-restricted-names": 2,
+        "no-shadow": 2,
+        "no-use-before-define": 2,
+        "react/jsx-uses-vars": 2,
+        "camelcase": 1,
+        "no-lonely-if": 1,
+        "no-nested-ternary": 2,
+        "no-unneeded-ternary": 1,
+        "no-trailing-spaces": 1,
+        "semi": 2
+    }
+}

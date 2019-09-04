@@ -1,0 +1,169 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Encrypting should encrypt blacklist 1`] = `
+Object {
+  "data": Object {
+    "data": Array [
+      Object {
+        "inbound": true,
+        "rows": Array [
+          Object {
+            "$types": Object {
+              "__encryptedData": "uint8array2",
+              "__encryptedData.buffer": "arraybuffer",
+            },
+            "__encryptedData": Object {
+              "buffer": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEQDtKRiCJPL40t4EOMKkANi9XlJHDvEKVrrJnuqaZtKH+628Eh0gbW02Fl3tg==",
+              "byteOffset": 0,
+              "length": 70,
+            },
+            "age": 25,
+            "id": 1,
+            "name": "Camilla",
+            "picture": "camilla.png",
+            "street": "",
+          },
+        ],
+        "tableName": "friends",
+      },
+    ],
+    "databaseName": "blacklist",
+    "databaseVersion": 1,
+    "tables": Array [
+      Object {
+        "name": "friends",
+        "rowCount": 1,
+        "schema": "++id,name,age",
+      },
+    ],
+  },
+  "formatName": "dexie",
+  "formatVersion": 1,
+}
+`;
+
+exports[`Encrypting should encrypt data 1`] = `
+Object {
+  "data": Object {
+    "data": Array [
+      Object {
+        "inbound": true,
+        "rows": Array [
+          Object {
+            "$types": Object {
+              "__encryptedData": "uint8array2",
+              "__encryptedData.buffer": "arraybuffer",
+            },
+            "__encryptedData": Object {
+              "buffer": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUfsSlGjy9yeoyoKCagomeQNi6GxWHHyKKSOoDnO1cdpZAPaj/w0Fz/XkkQ8mv8HRpOEZ5iOH4z70BDC4z5JNqzsf/D0UTbCCAa5s/a5UzXgumHHTqk7lssg6Wri+vilp",
+              "byteOffset": 0,
+              "length": 120,
+            },
+            "age": 25,
+            "id": 1,
+            "name": "Camilla",
+            "picture": "",
+            "street": "",
+          },
+        ],
+        "tableName": "friends",
+      },
+    ],
+    "databaseName": "MyDatabase",
+    "databaseVersion": 1,
+    "tables": Array [
+      Object {
+        "name": "friends",
+        "rowCount": 1,
+        "schema": "++id,name,age",
+      },
+    ],
+  },
+  "formatName": "dexie",
+  "formatVersion": 1,
+}
+`;
+
+exports[`Encrypting should encrypt whitelist 1`] = `
+Object {
+  "data": Object {
+    "data": Array [
+      Object {
+        "inbound": true,
+        "rows": Array [
+          Object {
+            "$types": Object {
+              "__encryptedData": "uint8array2",
+              "__encryptedData.buffer": "arraybuffer",
+            },
+            "__encryptedData": Object {
+              "buffer": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUfsSlGjy9yeoyoKCagomeQNi6GxWHHyKKSOoDnO1cdpZAPaj/w0Fz/XkkQ8mv8HRpOEZ5iOH4z70BDC4z5JNqzsf/D0UTbCCAa5s/a5UzXgumHHTqk7lssg6Wri+vilp",
+              "byteOffset": 0,
+              "length": 120,
+            },
+            "age": 25,
+            "id": 1,
+            "name": "Camilla",
+            "picture": "camilla.png",
+            "street": "",
+          },
+        ],
+        "tableName": "friends",
+      },
+    ],
+    "databaseName": "whitelist",
+    "databaseVersion": 1,
+    "tables": Array [
+      Object {
+        "name": "friends",
+        "rowCount": 1,
+        "schema": "++id,name,age",
+      },
+    ],
+  },
+  "formatName": "dexie",
+  "formatVersion": 1,
+}
+`;
+
+exports[`Encrypting should upgrade 1`] = `
+Object {
+  "data": Object {
+    "data": Array [
+      Object {
+        "inbound": true,
+        "rows": Array [
+          Object {
+            "$types": Object {
+              "__encryptedData": "uint8array2",
+              "__encryptedData.buffer": "arraybuffer",
+            },
+            "__encryptedData": Object {
+              "buffer": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPgxdjFy2otNxGdJeSMtwYANi6GxWHHyKKSOoDnO1cdpZAPaj/w0Fz/XkkQ8mv8HRpOEZ5iOH4z70BDC4z5JNqzsf/D0UTbCCAa5s/a5UzXgumHHTqk7lssg6Wri+vik4haySXEcSGg==",
+              "byteOffset": 0,
+              "length": 127,
+            },
+            "age": 25,
+            "id": 1,
+            "name": "Camilla",
+            "picture": "camilla.png",
+            "street": "",
+          },
+        ],
+        "tableName": "friends",
+      },
+    ],
+    "databaseName": "upgrade-db",
+    "databaseVersion": 1,
+    "tables": Array [
+      Object {
+        "name": "friends",
+        "rowCount": 1,
+        "schema": "++id,name,age",
+      },
+    ],
+  },
+  "formatName": "dexie",
+  "formatVersion": 1,
+}
+`;
