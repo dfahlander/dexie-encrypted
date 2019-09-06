@@ -56,7 +56,6 @@ function compareArrays(a, b) {
     return true;
 }
 
-
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -164,7 +163,24 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
                         const oldSetting = oldSettings ? oldSettings[table.name] : undefined;
                         const newSetting = cryptoSettings[table.name];
 
+                        function setupHooks() {
+                            if (newSetting === undefined) {
+                                return;
+                            }
+                            table.hook('creating', function(primKey, obj) {
+                                encryptWithRule(table, obj, newSetting);
+                            });
+                            table.hook('updating', function(modifications, primKey, obj) {
+                                return encryptWithRule(table, { ...obj }, newSetting);
+                            });
+                            table.hook('reading', function(obj) {
+                                return decryptWithRule(obj, newSetting);
+                            });
+                        }
+
                         if (oldSetting === newSetting) {
+                            // no upgrade needed.
+                            setupHooks();
                             return;
                         }
                         if (oldSetting === undefined || newSetting === undefined) ; else if (
@@ -174,6 +190,8 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
                             // both non-strings. Figure out if they're the same.
                             if (newSetting.type === oldSetting.type) {
                                 if (compareArrays(newSetting.fields, oldSetting.fields)) {
+                                    // no upgrade needed.
+                                    setupHooks();
                                     return;
                                 }
                             }
@@ -185,19 +203,7 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
                                 ref.value = encryptWithRule(table, decrypted, newSetting);
                                 return true;
                             })
-                            .then(function() {
-                                if (newSetting) {
-                                    table.hook('creating', function(primKey, obj) {
-                                        encryptWithRule(table, obj, newSetting);
-                                    });
-                                    table.hook('updating', function(modifications, primKey, obj) {
-                                        return encryptWithRule(table, { ...obj }, newSetting);
-                                    });
-                                    table.hook('reading', function(obj) {
-                                        return decryptWithRule(obj, newSetting);
-                                    });
-                                }
-                            });
+                            .then(setupHooks);
                     })
                 );
             })

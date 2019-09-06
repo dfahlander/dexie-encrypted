@@ -161,6 +161,46 @@ describe('Encrypting', () => {
 
 	});
 
+	it('should decrypt when the database is closed and reopened', async (done) => {
+		const db = new Dexie('decrypt-test-2');
+		encrypt(db, keyPair.publicKey, {
+			friends: cryptoOptions.DATA
+		}, new Uint8Array(24))
+
+		// Declare tables, IDs and indexes
+		db.version(1).stores({
+			friends: '++id, name, age'
+		});
+		
+		await db.open();
+
+		const original = {
+			name: 'Camilla',
+			age: 25,
+			street: 'East 13:th Street',
+			picture: 'camilla.png'
+		};
+
+		await db.friends.add({...original});
+
+		const db2 = new Dexie('decrypt-test-2');
+		encrypt(db2, keyPair.publicKey, {
+			friends: cryptoOptions.DATA
+		}, new Uint8Array(24))
+
+		// Declare tables, IDs and indexes
+		db2.version(1).stores({
+			friends: '++id, name, age'
+		});
+		
+		await db2.open();
+		const out = await db2.friends.get(1);
+		delete out.id;
+		expect(original).toEqual(out);
+		done();
+
+	});
+
 	it('should upgrade', async (done) => {
 		const db = new Dexie('upgrade-db');
 		encrypt(db, keyPair.publicKey, {

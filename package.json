@@ -33,6 +33,7 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "rollup index.js --format commonjs --file dist/index.js"
+    "build": "rollup index.js --format commonjs --file dist/index.js",
+    "format": "prettier index.js README.md --write"
   }
 }
