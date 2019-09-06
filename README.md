@@ -29,7 +29,7 @@ await db.open();
 const friend = {
     name: 'Camilla',
     age: 25,
-    street: 'East 13:th Street',
+    street: 'East 13th Street',
     picture: 'camilla.png',
 };
 
