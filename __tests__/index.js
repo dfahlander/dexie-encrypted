@@ -1,7 +1,5 @@
 import 'fake-indexeddb/auto';
-import {TextEncoder, TextDecoder} from 'text-encoding';
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+import '../test-utils/encoder';
 
 import Dexie from 'dexie';
 import 'dexie-export-import';

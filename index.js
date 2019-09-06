@@ -51,11 +51,14 @@ function compareArrays(a, b) {
     return true;
 }
 
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
 function encryptObject(key, object, nonce) {
     nonce = nonce || nacl.randomBytes(nacl.secretbox.nonceLength);
     const stringToEncrypt = tson.stringify(object);
-    const enc = new TextEncoder();
-    const encoded = enc.encode(stringToEncrypt);
+    const encoded = encoder.encode(stringToEncrypt);
     const encrypted = nacl.secretbox(encoded, nonce, key);
     const data = new Uint8Array(nonce.length + encrypted.length);
     data.set(nonce);
@@ -131,7 +134,6 @@ export default function encrypt(db, key, cryptoSettings, nonceOverride) {
                 entity.__encryptedData.length
             );
             const rawDecrypted = nacl.secretbox.open(message, nonce, key);
-            const decoder = new TextDecoder();
             const stringified = decoder.decode(rawDecrypted);
             const decrypted = tson.parse(stringified);
             const toReturn = {};
