@@ -61,11 +61,11 @@ encrypt(db, symmetricKey, {
     users: cryptoOptions.NON_INDEXED_FIELDS,
     friends: {
         type: cryptoOptions.WHITELIST,
-        fields: ['street', 'picture'], // note: these cannot be indices
+        fields: ['street', 'picture'], // these two fields and indices will be plain text
     },
     enemies: {
         type: cryptoOptions.BLACKLIST,
-        fields: ['picture', 'isMortalEnemy'],
+        fields: ['picture', 'isMortalEnemy'], // note: these cannot be indices
     },
 });
 ```
