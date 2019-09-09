@@ -1,10 +1,12 @@
 {
   "name": "dexie-encrypted",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Encryption middleware for Dexie",
   "main": "dist/index.js",
   "license": "MIT",
-  "files": ["dist/index.js"],
+  "files": [
+    "dist/index.js"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/mark43/dexie-encrypted.git"
