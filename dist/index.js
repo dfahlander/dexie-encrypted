@@ -13,16 +13,18 @@ var builtinTypes = _interopDefault(require('typeson-registry/presets/builtin'));
 const override = Dexie.override;
 const Promise = Dexie.Promise;
 
-const cryptoOptions = {
-    DATA: 'DATA',
+const tableEncryptionOptions = {
+    DATA: 'NON_INDEXED_FIELDS',
+    NON_INDEXED_FIELDS: 'NON_INDEXED_FIELDS',
     // DATA_AND_INDICES: 'DATA_AND_INDICES', // not implemented.
     WHITELIST: 'WHITELIST',
     BLACKLIST: 'BLACKLIST',
 };
+const cryptoOptions = tableEncryptionOptions;
 
 /* options example: 
 {
-	table1: cryptoOptions.DATA,
+	table1: cryptoOptions.NON_INDEXED_FIELDS,
 	table2: {
 		type: cryptoOptions.WHITELIST,
 		fields: ['harmlessData1', 'harmlessId']
@@ -215,3 +217,4 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
 
 exports.cryptoOptions = cryptoOptions;
 exports.default = encrypt;
+exports.tableEncryptionOptions = tableEncryptionOptions;
