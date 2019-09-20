@@ -91,6 +91,11 @@ function hideValue(input) {
 }
 
 function encrypt(db, key, cryptoSettings, nonceOverride) {
+
+    if ((key instanceof Uint8Array) === false || key.length !== 32) {
+        throw new Error('Dexie-encrypted requires a UInt8Array of length 32 for a encryption key.');
+    }
+
     db.Version.prototype._parseStoresSpec = override(
         db.Version.prototype._parseStoresSpec,
         overrideParseStoresSpec
@@ -170,7 +175,16 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
                                 return;
                             }
                             table.hook('creating', function(primKey, obj) {
+                                const preservedValue = {...obj};
                                 encryptWithRule(table, obj, newSetting);
+                                this.onsuccess = () => {
+                                    delete obj.__encryptedData;
+                                    Object.assign(obj, preservedValue);
+                                };
+                                this.onerror = () => {
+                                    delete obj.__encryptedData;
+                                    Object.assign(obj, preservedValue);
+                                };
                             });
                             table.hook('updating', function(modifications, primKey, obj) {
                                 return encryptWithRule(table, { ...obj }, newSetting);
@@ -211,9 +225,15 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
             })
             .then(function() {
                 return db._encryptionSettings.put(cryptoSettings);
-            });
-    });
+            }).catch(error => {
+                if (error.name === 'NotFoundError') {
+                    console.error("Dexie-encrypted can't find its encryption table. You may need to bump your database version.");
+                }
+                throw error;
+            });    });
 }
+
+Object.assign(encrypt, cryptoOptions);
 
 exports.cryptoOptions = cryptoOptions;
 exports.default = encrypt;
