@@ -86,6 +86,9 @@ function hideValue(input) {
 }
 
 export default function encrypt(db, key, cryptoSettings, nonceOverride) {
+    if (db.tables.length > 0) {
+        throw new Error('Dexie-encrypted: encrypt(db) must be called before db.version(...) has been called');
+    }
     db.Version.prototype._parseStoresSpec = override(
         db.Version.prototype._parseStoresSpec,
         overrideParseStoresSpec
@@ -151,7 +154,11 @@ export default function encrypt(db, key, cryptoSettings, nonceOverride) {
     }
 
     db.on('ready', function() {
-        return db._encryptionSettings
+        const encryptionSettings = db.table("_encryptionSettings");
+        if (!encryptionSettings) {
+            throw new Error("Dexie-encrypted can't find its encryption table. You may need to bump your database version.");
+        }
+        return encryptionSettings
             .toCollection()
             .last()
             .then(oldSettings => {
@@ -207,7 +214,7 @@ export default function encrypt(db, key, cryptoSettings, nonceOverride) {
                 );
             })
             .then(function() {
-                return db._encryptionSettings.put(cryptoSettings);
+                return encryptionSettings.put(cryptoSettings);
             });
     });
 }
