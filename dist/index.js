@@ -91,13 +91,18 @@ function hideValue(input) {
 }
 
 function encrypt(db, key, cryptoSettings, nonceOverride) {
-    if (db.tables.length > 0) {
-        throw new Error('Dexie-encrypted: encrypt(db) must be called before db.version(...) has been called');
-    }
     db.Version.prototype._parseStoresSpec = override(
         db.Version.prototype._parseStoresSpec,
         overrideParseStoresSpec
     );
+    if (db.verno > 0) {
+        // Make sure new tables are added if calling encrypt after defining versions.
+        try {
+            db.version(db.verno).stores({});
+        } catch (error) {
+            throw new Error("Dexie-encrypt: The call to encrypt() cannot be done on an open database");
+        }
+    }
 
     function encryptWithRule(table, entity, rule) {
         if (rule === undefined) {
@@ -159,8 +164,10 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
     }
 
     db.on('ready', function() {
-        const encryptionSettings = db.table("_encryptionSettings");
-        if (!encryptionSettings) {
+        let encryptionSettings;
+        try {
+            encryptionSettings = db.table("_encryptionSettings");
+        } catch (error) {
             throw new Error("Dexie-encrypted can't find its encryption table. You may need to bump your database version.");
         }
         return encryptionSettings
@@ -218,6 +225,12 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
             })
             .then(function() {
                 return encryptionSettings.put(cryptoSettings);
+            }).catch(error => {
+                if (error.name === "NotFoundError") {
+                    throw new Error("Dexie-encrypted can't find its encryption table. You may need to bump your database version.");
+                } else {
+                    return Promise.reject(error);
+                }
             });
     });
 }
