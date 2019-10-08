@@ -91,8 +91,7 @@ function hideValue(input) {
 }
 
 function encrypt(db, key, cryptoSettings, nonceOverride) {
-
-    if ((key instanceof Uint8Array) === false || key.length !== 32) {
+    if (key instanceof Uint8Array === false || key.length !== 32) {
         throw new Error('Dexie-encrypted requires a UInt8Array of length 32 for a encryption key.');
     }
 
@@ -105,7 +104,9 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
         try {
             db.version(db.verno).stores({});
         } catch (error) {
-            throw new Error("Dexie-encrypt: The call to encrypt() cannot be done on an open database");
+            throw new Error(
+                'Dexie-encrypt: The call to encrypt() cannot be done on an open database'
+            );
         }
     }
 
@@ -146,7 +147,7 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
         if (rule === undefined) {
             return entity;
         }
-        if (entity.__encryptedData) {
+        if (entity && entity.__encryptedData) {
             const nonce = entity.__encryptedData.slice(0, nacl.secretbox.nonceLength);
             const message = entity.__encryptedData.slice(
                 nacl.secretbox.nonceLength,
@@ -171,9 +172,11 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
     db.on('ready', function() {
         let encryptionSettings;
         try {
-            encryptionSettings = db.table("_encryptionSettings");
+            encryptionSettings = db.table('_encryptionSettings');
         } catch (error) {
-            throw new Error("Dexie-encrypted can't find its encryption table. You may need to bump your database version.");
+            throw new Error(
+                "Dexie-encrypted can't find its encryption table. You may need to bump your database version."
+            );
         }
         return encryptionSettings
             .toCollection()
@@ -189,7 +192,7 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
                                 return;
                             }
                             table.hook('creating', function(primKey, obj) {
-                                const preservedValue = {...obj};
+                                const preservedValue = { ...obj };
                                 encryptWithRule(table, obj, newSetting);
                                 this.onsuccess = () => {
                                     delete obj.__encryptedData;
@@ -239,9 +242,12 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
             })
             .then(function() {
                 return encryptionSettings.put(cryptoSettings);
-            }).catch(error => {
-                if (error.name === "NotFoundError") {
-                    throw new Error("Dexie-encrypted can't find its encryption table. You may need to bump your database version.");
+            })
+            .catch(error => {
+                if (error.name === 'NotFoundError') {
+                    throw new Error(
+                        "Dexie-encrypted can't find its encryption table. You may need to bump your database version."
+                    );
                 } else {
                     return Promise.reject(error);
                 }

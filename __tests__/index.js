@@ -327,4 +327,21 @@ describe('Encrypting', () => {
 		done();
 
 	});
+
+	it('should not explode if you get something undefined', async (done) => {
+		const db = new Dexie('explode-undefined');
+		
+		encrypt(db, keyPair.publicKey, {
+			friends: encrypt.DATA
+		}, new Uint8Array(24))
+
+		db.version(1).stores({
+			friends: '++id, name, age'
+		});
+
+		const val = await db.friends.get(1);
+		expect(val).toBe(undefined);
+		done();
+
+	});
 })
