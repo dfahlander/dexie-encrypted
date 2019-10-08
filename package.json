@@ -1,6 +1,6 @@
 {
   "name": "dexie-encrypted",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Encryption middleware for Dexie",
   "main": "dist/index.js",
   "license": "MIT",
