@@ -204,7 +204,13 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
                                 };
                             });
                             table.hook('updating', function(modifications, primKey, obj) {
-                                return encryptWithRule(table, { ...obj }, newSetting);
+                                const decrypted = decryptWithRule({ ...obj }, newSetting);
+                                const updates = {
+                                    ...decrypted,
+                                    ...modifications,
+                                };
+                                const encrypted = encryptWithRule(table, updates, newSetting);
+                                return encrypted;
                             });
                             table.hook('reading', function(obj) {
                                 return decryptWithRule(obj, newSetting);

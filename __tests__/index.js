@@ -344,4 +344,47 @@ describe('Encrypting', () => {
 		done();
 
 	});
+
+	it.only('should still work when you update an existing entity', async () => {
+		const db = new Dexie('in-and-out-test');
+		encrypt(db, keyPair.publicKey, {
+			friends: encrypt.DATA
+		}, new Uint8Array(24))
+
+		// Declare tables, IDs and indexes
+		db.version(1).stores({
+			friends: '++id, age'
+		});
+		
+		await db.open();
+
+		const original = {
+			name: 'Camilla',
+			age: 25,
+			street: 'East 13:th Street',
+			picture: 'camilla.png'
+		};
+
+		await db.friends.add({...original});
+
+
+		const updated = {
+			id: 1,
+			name: 'Someone other than Camilla',
+			age: 25,
+			street: 'East 13,000:th Street',
+			picture: 'camilla.png'
+		};
+
+		await db.friends.put(updated);
+
+		const out = await db.friends.get(1);
+
+		const readingDb = new Dexie('in-and-out-test');
+		await readingDb.open();
+		const data = await dbToJson(readingDb);
+
+		expect(out).toEqual(updated);
+		expect(data).toMatchSnapshot();
+	});
 })

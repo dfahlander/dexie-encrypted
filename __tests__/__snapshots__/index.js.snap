@@ -126,6 +126,63 @@ Object {
 }
 `;
 
+exports[`Encrypting should still work when you update an existing entity 1`] = `
+Object {
+  "data": Object {
+    "data": Array [
+      Object {
+        "inbound": true,
+        "rows": Array [
+          Object {
+            "friends": "NON_INDEXED_FIELDS",
+            "id": 1,
+          },
+        ],
+        "tableName": "_encryptionSettings",
+      },
+      Object {
+        "inbound": true,
+        "rows": Array [
+          Object {
+            "$types": Object {
+              "__encryptedData": "uint8array2",
+              "__encryptedData.buffer": "arraybuffer",
+            },
+            "__encryptedData": Object {
+              "buffer": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMe3m+xHIk9OcimfPF78dTwNi6GxWHHyKKTOmDn+2c95bQ6Cq/RoHga+w0w0Wqt7drfla/i3g4yrlBju5wMoH+BwZ6z0FG6iMZr926voQjDE8kmOKv0usjdApEa2k+yc216yVCghRAoSNIObKyVGyCVuX29RoQnnFS9kA7IH7KA2tXAdJJrSUHMYUHGh3askAd8+/7erJoLOU3RNyDdYc0RlRXk+Mwj7mbQORHfaeeF7eUUjneuR0",
+              "byteOffset": 0,
+              "length": 207,
+            },
+            "age": 25,
+            "id": 1,
+            "name": "",
+            "picture": "",
+            "street": "",
+          },
+        ],
+        "tableName": "friends",
+      },
+    ],
+    "databaseName": "in-and-out-test",
+    "databaseVersion": 1,
+    "tables": Array [
+      Object {
+        "name": "_encryptionSettings",
+        "rowCount": 1,
+        "schema": "++id",
+      },
+      Object {
+        "name": "friends",
+        "rowCount": 1,
+        "schema": "++id,age",
+      },
+    ],
+  },
+  "formatName": "dexie",
+  "formatVersion": 1,
+}
+`;
+
 exports[`Encrypting should upgrade 1`] = `
 Object {
   "data": Object {
