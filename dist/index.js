@@ -90,10 +90,17 @@ function hideValue(input) {
     return {};
 }
 
-function encrypt(db, key, cryptoSettings, nonceOverride) {
-    if (key instanceof Uint8Array === false || key.length !== 32) {
+function encrypt(db, keyOrPromise, cryptoSettings, nonceOverride) {
+    let keyPromise;
+    if (keyOrPromise.then) {
+        keyPromise = keyOrPromise;
+    } else if ((keyOrPromise instanceof Uint8Array) && keyOrPromise.length === 32) {
+        keyPromise = Dexie.Promise.resolve(keyOrPromise);
+    } else {
         throw new Error('Dexie-encrypted requires a UInt8Array of length 32 for a encryption key.');
     }
+
+    let key;
 
     db.Version.prototype._parseStoresSpec = override(
         db.Version.prototype._parseStoresSpec,
@@ -178,7 +185,13 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
                 "Dexie-encrypted can't find its encryption table. You may need to bump your database version."
             );
         }
-        return encryptionSettings
+        return keyPromise.then((receivedKey) => {
+            if ((receivedKey instanceof Uint8Array) && receivedKey.length === 32) {
+                key = receivedKey;
+            } else {
+                throw new Error('Dexie-encrypted requires a UInt8Array of length 32 for a encryption key.');
+            }
+        }).then(() => encryptionSettings
             .toCollection()
             .last()
             .then(oldSettings => {
@@ -257,7 +270,7 @@ function encrypt(db, key, cryptoSettings, nonceOverride) {
                 } else {
                     return Promise.reject(error);
                 }
-            });
+            }));
     });
 }
 

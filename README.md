@@ -45,7 +45,7 @@ encrypt(db, key, config);
 ```
 
 -   `db` - a Dexie database that has not had .version called.
--   `key` - a Uint8Array of length 32 that will be used for both encryption and decryption.
+-   `key` - a Uint8Array of length 32, or a promise that will resolve with one. This will be used for both encryption and decryption.
 -   `config` - a table level configuration that determines how dexie-encrypted will encrypt.
 
 ## Configuration

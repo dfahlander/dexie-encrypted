@@ -345,7 +345,7 @@ describe('Encrypting', () => {
 
 	});
 
-	it.only('should still work when you update an existing entity', async () => {
+	it('should still work when you update an existing entity', async () => {
 		const db = new Dexie('in-and-out-test');
 		encrypt(db, keyPair.publicKey, {
 			friends: encrypt.DATA
@@ -386,5 +386,42 @@ describe('Encrypting', () => {
 
 		expect(out).toEqual(updated);
 		expect(data).toMatchSnapshot();
+	});
+
+	it('should wait for a promise to resolve with a key if given a promise', async (done) => {
+		const db = new Dexie('async-key');
+
+		const keyPromise = Promise.resolve(keyPair.publicKey);
+		encrypt(db, keyPromise, {
+			friends: encrypt.DATA
+		}, new Uint8Array(24))
+
+		// Declare tables, IDs and indexes
+		db.version(1).stores({
+			friends: '++id, name, age'
+		});
+		
+		await db.open();
+
+		const original = {
+			name: 'Camilla',
+			age: 25,
+			street: 'East 13:th Street',
+			picture: 'camilla.png'
+		};
+
+		await db.friends.add(original);
+
+
+		const readingDb = new Dexie('async-key');
+		readingDb.version(1).stores({
+			friends: '++id, name, age'
+		});
+		await readingDb.open();
+
+		const data = await dbToJson(readingDb);
+		expect(data).toMatchSnapshot();
+		done();
+
 	});
 })

@@ -224,3 +224,45 @@ Object {
   "formatVersion": 1,
 }
 `;
+
+exports[`Encrypting should wait for a promise to resolve with a key if given a promise 1`] = `
+Object {
+  "data": Object {
+    "data": Array [
+      Object {
+        "inbound": true,
+        "rows": Array [
+          Object {
+            "$types": Object {
+              "__encryptedData": "uint8array2",
+              "__encryptedData.buffer": "arraybuffer",
+            },
+            "__encryptedData": Object {
+              "buffer": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUfsSlGjy9yeoyoKCagomeQNi6GxWHHyKKSOoDnO1cdpZAPaj/w0Fz/XkkQ8mv8HRpOEZ5iOH4z70BDC4z5JNqzsf/D0UTbCCAa5s/a5UzXgumHHTqk7lssg6Wri+vilp",
+              "byteOffset": 0,
+              "length": 120,
+            },
+            "age": 25,
+            "id": 1,
+            "name": "Camilla",
+            "picture": "",
+            "street": "",
+          },
+        ],
+        "tableName": "friends",
+      },
+    ],
+    "databaseName": "async-key",
+    "databaseVersion": 1,
+    "tables": Array [
+      Object {
+        "name": "friends",
+        "rowCount": 1,
+        "schema": "++id,name,age",
+      },
+    ],
+  },
+  "formatName": "dexie",
+  "formatVersion": 1,
+}
+`;
