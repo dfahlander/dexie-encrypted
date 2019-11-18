@@ -41,12 +41,19 @@ await db.friends.add(friend);
 ## Arguments
 
 ```javascript
-encrypt(db, key, config);
+encrypt(db, key, config, onKeyChange);
 ```
 
 -   `db` - a Dexie database that has not had .version called.
 -   `key` - a Uint8Array of length 32, or a promise that will resolve with one. This will be used for both encryption and decryption.
 -   `config` - a table level configuration that determines how dexie-encrypted will encrypt.
+-   `onKeyChange(db): Promise` - Use this to clear your database or perform other actions when the database cannot be decrypted. We have provided encrypt.clearAllTables and encrypt.clearEncryptedTables to make this simpler. Setup will resume when the returned promise resolves.
+
+## Key Error Utility Functions
+
+- `clearAllTables(db): Promise` - clears all data from the database.
+- `clearEncryptedTables(db): Promise` - clears data from all the encrypted tables, leaving unencrypted tables untouched.
+
 
 ## Configuration
 

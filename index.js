@@ -85,17 +85,15 @@ function hideValue(input) {
     return {};
 }
 
-export default function encrypt(db, keyOrPromise, cryptoSettings, nonceOverride) {
+export default function encrypt(db, keyOrPromise, cryptoSettings, onKeyChange, nonceOverride) {
     let keyPromise;
     if (keyOrPromise.then) {
         keyPromise = keyOrPromise;
-    } else if ((keyOrPromise instanceof Uint8Array) && keyOrPromise.length === 32) {
+    } else if (keyOrPromise instanceof Uint8Array && keyOrPromise.length === 32) {
         keyPromise = Dexie.Promise.resolve(keyOrPromise);
     } else {
         throw new Error('Dexie-encrypted requires a UInt8Array of length 32 for a encryption key.');
     }
-
-    let key;
 
     db.Version.prototype._parseStoresSpec = override(
         db.Version.prototype._parseStoresSpec,
@@ -171,8 +169,11 @@ export default function encrypt(db, keyOrPromise, cryptoSettings, nonceOverride)
         return entity;
     }
 
+    let key;
+
     db.on('ready', function() {
         let encryptionSettings;
+
         try {
             encryptionSettings = db.table('_encryptionSettings');
         } catch (error) {
@@ -180,95 +181,193 @@ export default function encrypt(db, keyOrPromise, cryptoSettings, nonceOverride)
                 "Dexie-encrypted can't find its encryption table. You may need to bump your database version."
             );
         }
-        return keyPromise.then((receivedKey) => {
-            if ((receivedKey instanceof Uint8Array) && receivedKey.length === 32) {
-                key = receivedKey
-            } else {
-                throw new Error('Dexie-encrypted requires a UInt8Array of length 32 for a encryption key.');
-            }
-        }).then(() => encryptionSettings
-            .toCollection()
-            .last()
-            .then(oldSettings => {
-                return Promise.all(
-                    db.tables.map(function(table) {
-                        const oldSetting = oldSettings ? oldSettings[table.name] : undefined;
-                        const newSetting = cryptoSettings[table.name];
 
-                        function setupHooks() {
-                            if (newSetting === undefined) {
-                                return;
-                            }
-                            table.hook('creating', function(primKey, obj) {
-                                const preservedValue = { ...obj };
-                                encryptWithRule(table, obj, newSetting);
-                                this.onsuccess = () => {
-                                    delete obj.__encryptedData;
-                                    Object.assign(obj, preservedValue);
-                                };
-                                this.onerror = () => {
-                                    delete obj.__encryptedData;
-                                    Object.assign(obj, preservedValue);
-                                };
-                            });
-                            table.hook('updating', function(modifications, primKey, obj) {
-                                const decrypted = decryptWithRule({ ...obj }, newSetting);
-                                const updates = {
-                                    ...decrypted,
-                                    ...modifications,
-                                };
-                                const encrypted = encryptWithRule(table, updates, newSetting);
-                                return encrypted;
-                            });
-                            table.hook('reading', function(obj) {
-                                return decryptWithRule(obj, newSetting);
-                            });
-                        }
-
-                        if (oldSetting === newSetting) {
-                            // no upgrade needed.
-                            setupHooks();
-                            return;
-                        }
-                        if (oldSetting === undefined || newSetting === undefined) {
-                            // no more to compare, the db needs to be encrypted/decrypted
-                        } else if (
-                            typeof oldSetting !== 'string' &&
-                            typeof newSetting !== 'string'
-                        ) {
-                            // both non-strings. Figure out if they're the same.
-                            if (newSetting.type === oldSetting.type) {
-                                if (compareArrays(newSetting.fields, oldSetting.fields)) {
-                                    // no upgrade needed.
-                                    setupHooks();
-                                    return;
-                                }
-                            }
-                        }
-                        return table
-                            .toCollection()
-                            .modify(function(entity, ref) {
-                                const decrypted = decryptWithRule(entity, oldSetting);
-                                ref.value = encryptWithRule(table, decrypted, newSetting);
-                                return true;
-                            })
-                            .then(setupHooks);
-                    })
-                );
-            })
-            .then(function() {
-                return encryptionSettings.put(cryptoSettings);
-            })
-            .catch(error => {
-                if (error.name === 'NotFoundError') {
-                    throw new Error(
-                        "Dexie-encrypted can't find its encryption table. You may need to bump your database version."
-                    );
+        return keyPromise
+            .then(receivedKey => {
+                if (receivedKey instanceof Uint8Array && receivedKey.length === 32) {
+                    key = receivedKey;
                 } else {
-                    return Promise.reject(error);
+                    throw new Error(
+                        'Dexie-encrypted requires a UInt8Array of length 32 for a encryption key.'
+                    );
                 }
-            }));
+            })
+            .then(() =>
+                encryptionSettings
+                    .toCollection()
+                    .last()
+                    .then(oldSettings => {
+                        const changeDetectionObj = oldSettings
+                            ? oldSettings['__key_change_detection']
+                            : null;
+
+                        let onKeyChangeResult;
+                        let keyChangePromise = Promise.resolve();
+
+                        if (changeDetectionObj) {
+                            const nonce = changeDetectionObj.slice(0, nacl.secretbox.nonceLength);
+                            const message = changeDetectionObj.slice(
+                                nacl.secretbox.nonceLength,
+                                changeDetectionObj.length
+                            );
+                            const rawDecrypted = nacl.secretbox.open(message, nonce, key);
+
+                            if (!rawDecrypted) {
+                                // The key has changed. Let's call the handler
+                                onKeyChangeResult = onKeyChange(db);
+
+                                keyChangePromise = onKeyChangeResult.then
+                                    ? onKeyChangeResult
+                                    : new Promise(resolve => {
+                                          resolve(onKeyChangeResult);
+                                      });
+                            }
+                        }
+
+                        return keyChangePromise.then(() => {
+                            return Promise.all(
+                                db.tables.map(function(table) {
+                                    const oldSetting = oldSettings
+                                        ? oldSettings[table.name]
+                                        : undefined;
+                                    const newSetting = cryptoSettings[table.name];
+
+                                    function setupHooks() {
+                                        if (newSetting === undefined) {
+                                            return;
+                                        }
+                                        table.hook('creating', function(primKey, obj) {
+                                            const preservedValue = { ...obj };
+                                            encryptWithRule(table, obj, newSetting);
+                                            this.onsuccess = () => {
+                                                delete obj.__encryptedData;
+                                                Object.assign(obj, preservedValue);
+                                            };
+                                            this.onerror = () => {
+                                                delete obj.__encryptedData;
+                                                Object.assign(obj, preservedValue);
+                                            };
+                                        });
+                                        table.hook('updating', function(
+                                            modifications,
+                                            primKey,
+                                            obj
+                                        ) {
+                                            const decrypted = decryptWithRule(
+                                                { ...obj },
+                                                newSetting
+                                            );
+                                            const updates = {
+                                                ...decrypted,
+                                                ...modifications,
+                                            };
+                                            const encrypted = encryptWithRule(
+                                                table,
+                                                updates,
+                                                newSetting
+                                            );
+                                            return encrypted;
+                                        });
+                                        table.hook('reading', function(obj) {
+                                            return decryptWithRule(obj, newSetting);
+                                        });
+                                    }
+
+                                    if (oldSetting === newSetting) {
+                                        // no upgrade needed.
+                                        setupHooks();
+                                        return;
+                                    }
+                                    if (oldSetting === undefined || newSetting === undefined) {
+                                        // no more to compare, the db needs to be encrypted/decrypted
+                                    } else if (
+                                        typeof oldSetting !== 'string' &&
+                                        typeof newSetting !== 'string'
+                                    ) {
+                                        // both non-strings. Figure out if they're the same.
+                                        if (newSetting.type === oldSetting.type) {
+                                            if (
+                                                compareArrays(newSetting.fields, oldSetting.fields)
+                                            ) {
+                                                // no upgrade needed.
+                                                setupHooks();
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    return table
+                                        .toCollection()
+                                        .modify(function(entity, ref) {
+                                            const decrypted = decryptWithRule(entity, oldSetting);
+                                            ref.value = encryptWithRule(
+                                                table,
+                                                decrypted,
+                                                newSetting
+                                            );
+                                            return true;
+                                        })
+                                        .then(setupHooks);
+                                })
+                            );
+                        });
+                    })
+                    .then(function() {
+                        return encryptionSettings.clear();
+                    })
+                    .then(function() {
+                        return encryptionSettings.put({
+                            __key_change_detection: encryptObject(
+                                key,
+                                [1, 2, 3, 4, 5],
+                                new Uint8Array(24)
+                            ),
+                            ...cryptoSettings,
+                        });
+                    })
+                    .catch(error => {
+                        if (error.name === 'NotFoundError') {
+                            throw new Error(
+                                "Dexie-encrypted can't find its encryption table. You may need to bump your database version."
+                            );
+                        } else {
+                            return Promise.reject(error);
+                        }
+                    })
+            );
     });
 }
 
-Object.assign(encrypt, cryptoOptions);
+export function clearAllTables(db) {
+    return Promise.all(
+        db.tables.map(function(table) {
+            return table.clear();
+        })
+    );
+}
+
+export async function clearEncryptedTables(db) {
+    let encryptionSettings;
+
+    try {
+        encryptionSettings = await db
+            .table('_encryptionSettings')
+            .toCollection()
+            .last();
+    } catch (error) {
+        throw new Error(
+            "Dexie-encrypted can't find its encryption table. You may need to bump your database version."
+        );
+    }
+
+    const promises = Object.keys(encryptionSettings).map(async function(key) {
+        const encryptionSettingValue = encryptionSettings[key];
+
+        if (tableEncryptionOptions[encryptionSettingValue]) {
+            await db.table(key).clear();
+        }
+    });
+
+    return Promise.all(promises);
+}
+
+Object.assign(encrypt, cryptoOptions, clearAllTables, clearEncryptedTables);
