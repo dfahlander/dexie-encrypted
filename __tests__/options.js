@@ -1,25 +1,28 @@
-import 'fake-indexeddb/auto';
-import '../test-utils/encoder';
+require('fake-indexeddb/auto');
 
-import Dexie from 'dexie';
-import 'dexie-export-import';
+const Dexie = require('dexie');
+require('dexie-export-import');
 
-import nacl from 'tweetnacl';
+const nacl = require('tweetnacl');
 
-import encrypt, { clearAllTables, clearEncryptedTables } from '../index';
+const {
+    applyEncryptionMiddleware,
+    clearAllTables,
+    clearEncryptedTables,
+    cryptoOptions,
+} = require('../src/index');
 
 const keyPair = nacl.sign.keyPair.fromSeed(new Uint8Array(32));
 
-describe.skip('Options', () => {
-
-    it('should encrypt whitelist', async done => {
-        const db = new Dexie('whitelist');
-        encrypt(
+describe('Options', () => {
+    it('should not encrypt unencrypted list', async () => {
+        const db = new Dexie('unencrypted list');
+        applyEncryptionMiddleware(
             db,
             keyPair.publicKey,
             {
                 friends: {
-                    type: encrypt.WHITELIST,
+                    type: cryptoOptions.UNENCRYPTED_LIST,
                     fields: ['picture'],
                 },
             },
@@ -29,7 +32,7 @@ describe.skip('Options', () => {
 
         // Declare tables, IDs and indexes
         db.version(1).stores({
-            friends: '++id, name, age',
+            friends: '++id, age',
         });
 
         await db.open();
@@ -43,33 +46,182 @@ describe.skip('Options', () => {
 
         await db.friends.add(original);
 
-        const readingDb = new Dexie('whitelist');
-        readingDb.version(1).stores({
-            friends: '++id, name, age',
-        });
-        encrypt(
-            readingDb,
+        const decryptingDb = new Dexie('unencrypted list');
+        applyEncryptionMiddleware(
+            decryptingDb,
             keyPair.publicKey,
             {
-                friends: encrypt.DATA,
+                friends: {
+                    type: cryptoOptions.UNENCRYPTED_LIST,
+                    fields: ['picture'],
+                },
             },
             clearAllTables,
             new Uint8Array(24)
         );
+        decryptingDb.version(1).stores({
+            friends: '++id, age',
+        });
+
+        await decryptingDb.open();
+        const decrypted = await decryptingDb.friends.get(1);
+
+        expect(decrypted).toMatchInlineSnapshot(`
+            Object {
+              "age": 25,
+              "id": 1,
+              "name": "Camilla",
+              "picture": "camilla.png",
+              "street": "East 13:th Street",
+            }
+        `);
+
+        const readingDb = new Dexie('unencrypted list');
+        readingDb.version(1).stores({
+            friends: '++id, age',
+        });
+
         await readingDb.open();
         const out = await readingDb.friends.get(1);
-
-        expect(out).toEqual({...original, id: 1})
-        done();
+        expect(out).toMatchInlineSnapshot(`
+            Object {
+              "__encryptedData": Uint8Array [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                81,
+                251,
+                18,
+                148,
+                104,
+                242,
+                247,
+                39,
+                168,
+                202,
+                130,
+                130,
+                106,
+                10,
+                38,
+                121,
+                3,
+                98,
+                232,
+                108,
+                86,
+                28,
+                124,
+                138,
+                41,
+                35,
+                168,
+                14,
+                115,
+                181,
+                113,
+                218,
+                89,
+                0,
+                246,
+                163,
+                255,
+                13,
+                5,
+                207,
+                245,
+                228,
+                145,
+                15,
+                38,
+                191,
+                193,
+                209,
+                164,
+                225,
+                25,
+                230,
+                35,
+                135,
+                227,
+                62,
+                244,
+                4,
+                48,
+                184,
+                207,
+                146,
+                77,
+                171,
+                59,
+                31,
+                252,
+                61,
+                20,
+                77,
+                176,
+                130,
+                1,
+                174,
+                108,
+                253,
+                174,
+                84,
+                205,
+                120,
+                46,
+                152,
+                113,
+                211,
+                170,
+                78,
+                229,
+                178,
+                200,
+                58,
+                90,
+                184,
+                190,
+                190,
+                41,
+                105,
+              ],
+              "age": 25,
+              "id": 1,
+              "picture": "camilla.png",
+            }
+        `);
     });
-    it('should encrypt blacklist', async done => {
-        const db = new Dexie('blacklist');
-        encrypt(
+
+    it('should encrypt encrypt list', async () => {
+        const db = new Dexie('encrypt-list');
+        applyEncryptionMiddleware(
             db,
             keyPair.publicKey,
             {
                 friends: {
-                    type: encrypt.BLACKLIST,
+                    type: cryptoOptions.ENCRYPT_LIST,
                     fields: ['street'],
                 },
             },
@@ -93,23 +245,375 @@ describe.skip('Options', () => {
 
         await db.friends.add(original);
 
-        const readingDb = new Dexie('blacklist');
-        readingDb.version(1).stores({
-            friends: '++id, name, age',
-        });
-        encrypt(
-            readingDb,
+        const decryptingDb = new Dexie('encrypt-list');
+        applyEncryptionMiddleware(
+            decryptingDb,
             keyPair.publicKey,
             {
-                friends: encrypt.DATA,
+                friends: {
+                    type: cryptoOptions.ENCRYPT_LIST,
+                    fields: ['street'],
+                },
             },
             clearAllTables,
             new Uint8Array(24)
         );
+        decryptingDb.version(1).stores({
+            friends: '++id, name, age',
+        });
+
+        await decryptingDb.open();
+        const decrypted = await decryptingDb.friends.get(1);
+        expect(decrypted).toMatchInlineSnapshot(`
+            Object {
+              "age": 25,
+              "id": 1,
+              "name": "Camilla",
+              "picture": "camilla.png",
+              "street": "East 13:th Street",
+            }
+        `);
+
+        const readingDb = new Dexie('encrypt-list');
+        readingDb.version(1).stores({
+            friends: '++id, name, age',
+        });
+
         await readingDb.open();
         const out = await readingDb.friends.get(1);
+        expect(out).toMatchInlineSnapshot(`
+            Object {
+              "__encryptedData": Uint8Array [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                81,
+                251,
+                18,
+                148,
+                104,
+                242,
+                247,
+                39,
+                168,
+                202,
+                130,
+                130,
+                106,
+                10,
+                38,
+                121,
+                3,
+                98,
+                232,
+                108,
+                86,
+                28,
+                124,
+                138,
+                41,
+                35,
+                168,
+                14,
+                115,
+                181,
+                113,
+                218,
+                89,
+                0,
+                246,
+                163,
+                255,
+                13,
+                5,
+                207,
+                245,
+                228,
+                145,
+                15,
+                38,
+                191,
+                193,
+                209,
+                164,
+                225,
+                25,
+                230,
+                35,
+                135,
+                227,
+                62,
+                244,
+                4,
+                48,
+                184,
+                207,
+                146,
+                77,
+                171,
+                59,
+                31,
+                252,
+                61,
+                20,
+                77,
+                176,
+                130,
+                1,
+                174,
+                108,
+                253,
+                174,
+                84,
+                205,
+                120,
+                46,
+                152,
+                113,
+                211,
+                170,
+                78,
+                229,
+                178,
+                200,
+                58,
+                90,
+                184,
+                190,
+                190,
+                41,
+                105,
+              ],
+              "age": 25,
+              "id": 1,
+              "name": "Camilla",
+              "picture": "camilla.png",
+            }
+        `);
+    });
 
-        expect(out).toEqual({...original, id: 1});
+    it('should encrypt non-indexed fields', async done => {
+        const db = new Dexie('non-indexed-fields');
+        applyEncryptionMiddleware(
+            db,
+            keyPair.publicKey,
+            {
+                friends: cryptoOptions.NON_INDEXED_FIELDS,
+            },
+            clearAllTables,
+            new Uint8Array(24)
+        );
+
+        // Declare tables, IDs and indexes
+        db.version(1).stores({
+            friends: '++id, name, age',
+        });
+
+        await db.open();
+
+        const original = {
+            name: 'Camilla',
+            age: 25,
+            street: 'East 13:th Street',
+            picture: 'camilla.png',
+        };
+
+        await db.friends.add(original);
+
+        const decryptingDb = new Dexie('non-indexed-fields');
+        applyEncryptionMiddleware(
+            decryptingDb,
+            keyPair.publicKey,
+            {
+                friends: {
+                    type: cryptoOptions.NON_INDEXED_FIELDS,
+                    fields: ['street'],
+                },
+            },
+            clearAllTables,
+            new Uint8Array(24)
+        );
+        decryptingDb.version(1).stores({
+            friends: '++id, name, age',
+        });
+
+        await decryptingDb.open();
+        const decrypted = await decryptingDb.friends.get(1);
+        expect(decrypted).toMatchInlineSnapshot(`
+            Object {
+              "age": 25,
+              "id": 1,
+              "name": "Camilla",
+              "picture": "camilla.png",
+              "street": "East 13:th Street",
+            }
+        `);
+
+        const readingDb = new Dexie('non-indexed-fields');
+        readingDb.version(1).stores({
+            friends: '++id, name, age',
+        });
+
+        await readingDb.open();
+        const out = await readingDb.friends.get(1);
+        expect(out).toMatchInlineSnapshot(`
+            Object {
+              "__encryptedData": Uint8Array [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                162,
+                26,
+                104,
+                243,
+                116,
+                100,
+                222,
+                194,
+                68,
+                123,
+                52,
+                70,
+                113,
+                135,
+                111,
+                42,
+                3,
+                98,
+                232,
+                108,
+                86,
+                28,
+                124,
+                138,
+                41,
+                35,
+                168,
+                14,
+                115,
+                181,
+                113,
+                218,
+                89,
+                0,
+                246,
+                163,
+                255,
+                13,
+                5,
+                207,
+                245,
+                228,
+                145,
+                15,
+                60,
+                175,
+                145,
+                142,
+                240,
+                185,
+                25,
+                175,
+                117,
+                176,
+                231,
+                40,
+                244,
+                6,
+                59,
+                169,
+                176,
+                135,
+                86,
+                255,
+                72,
+                90,
+                189,
+                98,
+                5,
+                81,
+                178,
+                253,
+                87,
+                172,
+                96,
+                251,
+                174,
+                3,
+                147,
+                63,
+                124,
+                203,
+                48,
+                196,
+                190,
+                81,
+                233,
+                252,
+                158,
+                121,
+                23,
+                169,
+                189,
+                176,
+                103,
+                120,
+                198,
+                235,
+                134,
+                16,
+                26,
+                1,
+                26,
+              ],
+              "age": 25,
+              "id": 1,
+              "name": "Camilla",
+            }
+        `);
+
         done();
     });
 
@@ -117,11 +621,11 @@ describe.skip('Options', () => {
         const db = new Dexie('async-key');
 
         const keyPromise = Promise.resolve(keyPair.publicKey);
-        encrypt(
+        applyEncryptionMiddleware(
             db,
             keyPromise,
             {
-                friends: encrypt.DATA,
+                friends: cryptoOptions.NON_INDEXED_FIELDS,
             },
             clearAllTables,
             new Uint8Array(24)
@@ -147,11 +651,11 @@ describe.skip('Options', () => {
         readingDb.version(1).stores({
             friends: '++id, name, age',
         });
-        encrypt(
+        applyEncryptionMiddleware(
             readingDb,
             keyPromise,
             {
-                friends: encrypt.DATA,
+                friends: cryptoOptions.NON_INDEXED_FIELDS,
             },
             clearAllTables,
             new Uint8Array(24)
@@ -160,7 +664,7 @@ describe.skip('Options', () => {
         await readingDb.open();
 
         const out = await readingDb.friends.get(1);
-        expect(out).toEqual({...original, id: 1})
+        expect(out).toEqual({ ...original, id: 1 });
     });
 
     it('should execute callback when key changes', async done => {
@@ -171,11 +675,11 @@ describe.skip('Options', () => {
         key.set([1, 2, 3], 0);
         key2.set([1, 2, 3], 1);
 
-        encrypt(
+        applyEncryptionMiddleware(
             db,
             key,
             {
-                friends: encrypt.DATA,
+                friends: cryptoOptions.NON_INDEXED_FIELDS,
             },
             clearEncryptedTables,
             new Uint8Array(24)
@@ -201,11 +705,11 @@ describe.skip('Options', () => {
 
         expect(await db.friends.get(1)).not.toEqual(undefined);
 
-        encrypt(
+        applyEncryptionMiddleware(
             db2,
             key2,
             {
-                friends: encrypt.DATA,
+                friends: cryptoOptions.NON_INDEXED_FIELDS,
             },
             clearEncryptedTables,
             new Uint8Array(24)
@@ -221,4 +725,4 @@ describe.skip('Options', () => {
         expect(friends).toEqual(undefined);
         done();
     });
-})
+});
