@@ -12,7 +12,7 @@
         "url": "https://github.com/mark43/dexie-encrypted.git"
     },
     "dependencies": {
-        "@stablelib/utf8": "1.0.0",
+        "@stablelib/utf8": "1.0.2",
         "tweetnacl": "1.0.3",
         "typeson": "5.18.2",
         "typeson-registry": "1.0.0-alpha.38"
