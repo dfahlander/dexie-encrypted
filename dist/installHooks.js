@@ -80,6 +80,7 @@ function installHooks(db, encryptionOptions, keyPromise, performEncryption, perf
     // guaranteed to happen before the key is actually needed.
     let encryptionKey = new Uint8Array(32);
     keyPromise.then(realKey => {
+        encryptionKey = realKey;
     });
     return db.use({
         stack: 'dbcore',
