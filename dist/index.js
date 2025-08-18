@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.applyEncryptionMiddleware = exports.UNENCRYPTED_LIST = exports.ENCRYPT_LIST = exports.NON_INDEXED_FIELDS = void 0;
+exports.clearEncryptedTables = exports.clearAllTables = exports.UNENCRYPTED_LIST = exports.ENCRYPT_LIST = exports.NON_INDEXED_FIELDS = exports.cryptoOptions = void 0;
+exports.applyEncryptionMiddleware = applyEncryptionMiddleware;
 const applyMiddleware_1 = require("./applyMiddleware");
 const encryptionMethods_1 = require("./encryptionMethods");
 const types_1 = require("./types");
@@ -13,7 +14,7 @@ var applyMiddleware_2 = require("./applyMiddleware");
 Object.defineProperty(exports, "clearAllTables", { enumerable: true, get: function () { return applyMiddleware_2.clearAllTables; } });
 Object.defineProperty(exports, "clearEncryptedTables", { enumerable: true, get: function () { return applyMiddleware_2.clearEncryptedTables; } });
 function applyEncryptionMiddleware(db, encryptionKey, tableSettings, onKeyChange, _nonceOverrideForTesting) {
-    applyMiddleware_1.applyMiddlewareWithCustomEncryption({
+    (0, applyMiddleware_1.applyMiddlewareWithCustomEncryption)({
         db,
         encryptionKey,
         tableSettings,
@@ -23,5 +24,4 @@ function applyEncryptionMiddleware(db, encryptionKey, tableSettings, onKeyChange
         _nonceOverrideForTesting,
     });
 }
-exports.applyEncryptionMiddleware = applyEncryptionMiddleware;
 //# sourceMappingURL=index.js.map
