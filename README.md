@@ -129,3 +129,34 @@ Dexie-encrypted saves your configuration to a database table, if you change your
 -   The shape of objects does not change; if `name` is a string that must be encrypted it will be an empty string in the database. Numbers are saved as 0, and booleans as false. This is an optimization that prevents the browser from needing to create hidden classes.
 -   Tables missing from your configuration will not be encrypted.
 -   The WebCrypto standard was not used because it doesn't offer a synchronous API, and that does not play well with IndexedDB transactions. Surprisingly, it's also much slower than tweetnacl.js. The browser's built in crypto can still be used for entropy.
+
+## Usage togehter with [Dexie Cloud](https://www.npmjs.com/package/dexie-cloud-addon)
+
+1. You list dexie-encrypteds internal table `"_encryptionSettings"` in dexie-cloud's unsyncedTables [configuration](https://dexie.org/cloud/docs/db.cloud.configure()) option.
+2. If you don't just want local encryption but encryption also in the cloud servers (which I assume was your requirement) you need to change the level at which the encryption occur, so it occurs before sync. See snippet below on how to do it.
+
+### Making dexie-encrypted work with dexie-cloud
+
+```ts
+db.cloud.configure({
+  ...,
+  unsyncedTables: ["_encryptionSettings"]
+});
+```
+
+### Applying encryption layer above sync layer:
+
+```ts
+function reorderDexieEncrypted (db: Dexie) {
+  // @ts-ignore
+  const mw = db._middlewares.dbcore.find(mw => mw.name === 'encryption');
+  if (!mw) throw new Error("Dexie encrypted not applied");
+  db.use({
+    name: "encryption",
+    stack: "dbcore",
+    level: 2,
+    create: mw.create
+  });
+}
+```
+Call this function after having called dexie-encrypted's `applyEncryptionMiddleware()`. This function forces dexie-encrypted to be invoked above the sync layer so that encrypted fields keeps being encrypted in dexie-cloud servers.
