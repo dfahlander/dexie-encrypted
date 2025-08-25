@@ -132,8 +132,8 @@ Dexie-encrypted saves your configuration to a database table, if you change your
 
 ## Usage togehter with [Dexie Cloud](https://www.npmjs.com/package/dexie-cloud-addon)
 
-1. You list dexie-encrypteds internal table `"_encryptionSettings"` in dexie-cloud's unsyncedTables [configuration](https://dexie.org/cloud/docs/db.cloud.configure()) option.
-2. If you don't just want local encryption but encryption also in the cloud servers (which I assume was your requirement) you need to change the level at which the encryption occur, so it occurs before sync. See snippet below on how to do it.
+1. List dexie-encrypted's internal table `"_encryptionSettings"` in dexie-cloud's unsyncedTables [configuration](https://dexie.org/cloud/docs/db.cloud.configure()) option.
+2. If you don't just want local encryption but encryption also in the cloud servers, you need to change the level at which the encryption occur, so it occurs before sync. See snippet below on how to do it.
 
 ### Making dexie-encrypted work with dexie-cloud
 
