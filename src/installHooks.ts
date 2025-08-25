@@ -68,7 +68,7 @@ export function encryptEntity<T extends Dexie.Table>(
 }
 
 export function decryptEntity<T extends Dexie.Table>(
-    entity: TableType<T> | undefined,
+    entity: (TableType<T> & { __encryptedData?: Uint8Array }) | undefined,
     rule: EncryptionOption<T> | undefined,
     encryptionKey: Uint8Array,
     performDecryption: DecryptionMethod
@@ -111,7 +111,7 @@ export function installHooks<T extends Dexie>(
     // this promise has to be resolved in order for the database to be open
     // but we also need to add the hooks before the db is open, so it's
     // guaranteed to happen before the key is actually needed.
-    let encryptionKey = new Uint8Array(32);
+    let encryptionKey: Uint8Array = new Uint8Array(32);
     keyPromise.then(realKey => {
         encryptionKey = realKey;
     });

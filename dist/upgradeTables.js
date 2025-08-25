@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.upgradeTables = void 0;
+exports.upgradeTables = upgradeTables;
 const tslib_1 = require("tslib");
 const dexie_1 = tslib_1.__importDefault(require("dexie"));
 const types_1 = require("./types");
@@ -53,13 +53,14 @@ function upgradeTables(db, tableSettings, encryptionKey, oldSettings, encrypt, d
                     }
                 }
                 yield table.toCollection().modify(function (entity, ref) {
-                    const decrypted = installHooks_1.decryptEntity(entity, oldSetting, encryptionKey, decrypt);
-                    ref.value = installHooks_1.encryptEntity(table, decrypted, newSetting, encryptionKey, encrypt, nonceOverride);
+                    const decrypted = (0, installHooks_1.decryptEntity)(entity, oldSetting, encryptionKey, decrypt);
+                    if (decrypted) {
+                        ref.value = (0, installHooks_1.encryptEntity)(table, decrypted, newSetting, encryptionKey, encrypt, nonceOverride);
+                    }
                 });
                 return;
             });
         }));
     });
 }
-exports.upgradeTables = upgradeTables;
 //# sourceMappingURL=upgradeTables.js.map

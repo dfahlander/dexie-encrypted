@@ -4,8 +4,8 @@ export declare const tableEncryptionOptions: {
     readonly UNENCRYPTED_LIST: "UNENCRYPTED_LIST";
     readonly ENCRYPT_LIST: "ENCRYPT_LIST";
 };
-export declare type TableType<T> = T extends Dexie.Table<infer U> ? U : never;
-export declare type EncryptionOption<T extends Dexie.Table> = 'NON_INDEXED_FIELDS' | {
+export type TableType<T> = T extends Dexie.Table<infer U> ? U : never;
+export type EncryptionOption<T extends Dexie.Table> = 'NON_INDEXED_FIELDS' | {
     type: 'UNENCRYPTED_LIST' | 'ENCRYPT_LIST';
     fields: (keyof TableType<T>)[];
 };
@@ -14,20 +14,20 @@ export declare const cryptoOptions: {
     readonly UNENCRYPTED_LIST: "UNENCRYPTED_LIST";
     readonly ENCRYPT_LIST: "ENCRYPT_LIST";
 };
-export declare type CryptoSettings<T extends Dexie> = Partial<{
+export type CryptoSettings<T extends Dexie> = Partial<{
     [U in keyof T]: T[U] extends Dexie.Table ? EncryptionOption<T[U]> : never;
 }>;
-export declare type TablesOf<T extends Dexie> = {
+export type TablesOf<T extends Dexie> = {
     [U in keyof T]: T[U] extends Dexie.Table ? T[U] : never;
 };
-export declare type TableOf<T extends Dexie> = TablesOf<T>[keyof TablesOf<T>];
-export declare type CryptoSettingsTableType<T extends Dexie> = {
+export type TableOf<T extends Dexie> = TablesOf<T>[keyof TablesOf<T>];
+export type CryptoSettingsTableType<T extends Dexie> = {
     settings: CryptoSettings<T>;
     keyChangeDetection: Uint8Array;
 };
-export declare type CryptoSettingsTable<T extends Dexie> = Dexie.Table<CryptoSettingsTableType<T>, number>;
-export declare type EncryptionMethod = (encryptionKey: Uint8Array, input: any, nonceOverride?: Uint8Array) => Uint8Array;
-export declare type DecryptionMethod = (encryptionKey: Uint8Array, input: Uint8Array) => any;
+export type CryptoSettingsTable<T extends Dexie> = Dexie.Table<CryptoSettingsTableType<T>, number>;
+export type EncryptionMethod = (encryptionKey: Uint8Array, input: any, nonceOverride?: Uint8Array) => Uint8Array;
+export type DecryptionMethod = (encryptionKey: Uint8Array, input: Uint8Array) => any;
 export interface EncryptDatabaseParams<T extends Dexie> {
     db: T;
     encryptionKey: Uint8Array | Promise<Uint8Array>;

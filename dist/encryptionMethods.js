@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decryptWithNacl = exports.encryptWithNacl = void 0;
+exports.encryptWithNacl = encryptWithNacl;
+exports.decryptWithNacl = decryptWithNacl;
 const tslib_1 = require("tslib");
 const tweetnacl_1 = tslib_1.__importDefault(require("tweetnacl"));
 const utf8_1 = require("@stablelib/utf8");
@@ -14,13 +15,12 @@ function encryptWithNacl(key, object, nonce) {
         nonce = tweetnacl_1.default.randomBytes(tweetnacl_1.default.secretbox.nonceLength);
     }
     const stringified = tson.stringify(object);
-    const encrypted = tweetnacl_1.default.secretbox(utf8_1.encode(stringified), nonce, key);
+    const encrypted = tweetnacl_1.default.secretbox((0, utf8_1.encode)(stringified), nonce, key);
     const data = new Uint8Array(nonce.length + encrypted.length);
     data.set(nonce);
     data.set(encrypted, nonce.length);
     return data;
 }
-exports.encryptWithNacl = encryptWithNacl;
 function decryptWithNacl(encryptionKey, encryptedArray) {
     const nonce = encryptedArray.slice(0, tweetnacl_1.default.secretbox.nonceLength);
     const message = encryptedArray.slice(tweetnacl_1.default.secretbox.nonceLength, encryptedArray.length);
@@ -28,7 +28,6 @@ function decryptWithNacl(encryptionKey, encryptedArray) {
     if (rawDecrypted === null) {
         throw new Error('Dexie-encrypted was unable to decrypt an entity.');
     }
-    return tson.parse(utf8_1.decode(rawDecrypted));
+    return tson.parse((0, utf8_1.decode)(rawDecrypted));
 }
-exports.decryptWithNacl = decryptWithNacl;
 //# sourceMappingURL=encryptionMethods.js.map

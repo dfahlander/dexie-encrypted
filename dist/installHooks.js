@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.installHooks = exports.decryptEntity = exports.encryptEntity = void 0;
+exports.encryptEntity = encryptEntity;
+exports.decryptEntity = decryptEntity;
+exports.installHooks = installHooks;
 const tslib_1 = require("tslib");
 const dexie_1 = tslib_1.__importDefault(require("dexie"));
 const types_1 = require("./types");
@@ -52,7 +54,6 @@ function encryptEntity(table, entity, rule, encryptionKey, performEncryption, no
     dataToStore.__encryptedData = performEncryption(encryptionKey, entity, nonceOverride);
     return dataToStore;
 }
-exports.encryptEntity = encryptEntity;
 function decryptEntity(entity, rule, encryptionKey, performDecryption) {
     if (rule === undefined || entity === undefined || !entity.__encryptedData) {
         return entity;
@@ -73,7 +74,6 @@ function decryptEntity(entity, rule, encryptionKey, performDecryption) {
     }
     return Object.assign(Object.assign({}, unencryptedFields), decrypted);
 }
-exports.decryptEntity = decryptEntity;
 function installHooks(db, encryptionOptions, keyPromise, performEncryption, performDecryption, nonceOverride) {
     // this promise has to be resolved in order for the database to be open
     // but we also need to add the hooks before the db is open, so it's
@@ -136,7 +136,8 @@ function installHooks(db, encryptionOptions, keyPromise, performEncryption, perf
                             return table.getMany(req).then(items => {
                                 return items.map(decrypt);
                             });
-                        }, query(req) {
+                        },
+                        query(req) {
                             return table.query(req).then(res => {
                                 return dexie_1.default.Promise.all(res.result.map(decrypt)).then(result => (Object.assign(Object.assign({}, res), { result })));
                             });
@@ -151,5 +152,4 @@ function installHooks(db, encryptionOptions, keyPromise, performEncryption, perf
         },
     });
 }
-exports.installHooks = installHooks;
 //# sourceMappingURL=installHooks.js.map

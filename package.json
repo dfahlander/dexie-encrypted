@@ -1,6 +1,6 @@
 {
     "name": "dexie-encrypted",
-    "version": "2.0.0",
+    "version": "4.2.0-beta.1",
     "description": "Encryption middleware for Dexie",
     "main": "dist",
     "license": "MIT",
@@ -19,19 +19,19 @@
     },
     "devDependencies": {
         "@types/jest": "26.0.10",
-        "dexie": "^3.0.0",
-        "dexie-export-import": "^1.0.0-beta.13",
+        "dexie": "^4.2.0",
+        "dexie-export-import": "^4.1.4",
         "eslint": "^6.3.0",
         "fake-indexeddb": "^2.1.1",
         "jest": "26.4.0",
         "prettier": "^1.18.2",
         "text-encoding": "^0.7.0",
         "ts-jest": "26.2.0",
-        "tsc": "1.20150623.0",
-        "typescript": "3.9.7"
+        "tslib": "^2.8.1",
+        "typescript": "5.9.2"
     },
     "peerDependencies": {
-        "dexie": "^3.0.0"
+        "dexie": ">=3.0.0 <5.0.0"
     },
     "scripts": {
         "test": "jest",

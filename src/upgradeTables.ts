@@ -69,16 +69,23 @@ export async function upgradeTables<T extends Dexie>(
                 }
             }
 
-            await table.toCollection().modify(function(entity: TableOf<T>, ref) {
-                const decrypted = decryptEntity(entity, oldSetting, encryptionKey, decrypt);
-                ref.value = encryptEntity(
-                    table,
-                    decrypted,
-                    newSetting,
-                    encryptionKey,
-                    encrypt,
-                    nonceOverride
+            await table.toCollection().modify(function(entity: TableOf<T>, ref: any) {
+                const decrypted = decryptEntity(
+                    entity as any,
+                    oldSetting, 
+                    encryptionKey, 
+                    decrypt
                 );
+                if (decrypted) {
+                    ref.value = encryptEntity(
+                        table,
+                        decrypted as any,
+                        newSetting,
+                        encryptionKey,
+                        encrypt,
+                        nonceOverride
+                    );
+                }
             });
             return;
         })
